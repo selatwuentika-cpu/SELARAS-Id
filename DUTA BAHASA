@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SELARAS.id | Selaraskan Nalar dan Rasa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --charming-red: #E63946;
+            --accent-orange: #FFB703;
+            --soft-purple: #6D597A;
+            --dark: #1A1A1A;
+            --light: #F8F9FA;
+        }
+
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background-color: var(--light);
+        }
+        
+        .bg-charming-red { background-color: var(--charming-red); }
+        .text-charming-red { color: var(--charming-red); }
+        .bg-accent-orange { background-color: var(--accent-orange); }
+        
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card-hover:hover { transform: translateY(-5px); transition: 0.3s; }
+        .notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: var(--charming-red);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
+
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+<!-- Navigation -->
+<nav id="main-nav" class="hidden bg-white shadow-lg sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="font-bold text-2xl text-charming-red">
+            <i class="fas fa-comments mr-2"></i>SELARAS<span class="text-gray-800">.id</span>
+        </div>
+        <div class="hidden md:flex space-x-6 items-center">
+            <button onclick="showSection('dashboard')" class="hover:text-charming-red transition"><i class="fas fa-home mr-1"></i>Dashboard</button>
+            <button onclick="showSection('komunikasi')" class="hover:text-charming-red transition"><i class="fas fa-heart mr-1"></i>Berkomunikasi</button>
+            <button onclick="showSection('argumen')" class="hover:text-charming-red transition"><i class="fas fa-brain mr-1"></i>Berargumentasi</button>
+            <button onclick="showSection('diskusi')" class="relative hover:text-charming-red transition">
+                <i class="fas fa-users mr-1"></i>Diskusi
+                <span id="notif-badge" class="hidden absolute -top-2 -right-2 bg-charming-red text-white text-xs px-2 py-1 rounded-full"></span>
+            </button>
+            <button onclick="showSection('modul')" class="hover:text-charming-red transition"><i class="fas fa-book mr-1"></i>Modul</button>
+            <button onclick="logout()" class="text-red-500 font-semibold hover:text-red-700"><i class="fas fa-sign-out-alt mr-1"></i>Keluar</button>
+        </div>
+    </div>
+</nav>
+
+<!-- LOGIN SECTION -->
+<div id="login-section" class="section active min-h-screen flex items-center justify-center bg-gradient-to-br from-charming-red to-red-700 relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-10 left-10 w-40 h-40 bg-white rounded-full blur-3xl"></div>
+        <div class="absolute bottom-10 right-10 w-40 h-40 bg-white rounded-full blur-3xl"></div>
+    </div>
+    
+    <div class="bg-white p-10 rounded-3xl shadow-2xl z-10 w-full max-w-md text-center">
+        <div class="mb-6">
+            <i class="fas fa-comments text-6xl text-charming-red mb-3"></i>
+            <h1 class="text-4xl font-bold text-charming-red">SELARAS.id</h1>
+            <p class="text-gray-600 italic mt-2">"Selaraskan Nalar dan Rasa dalam Berbahasa"</p>
+        </div>
+        
+        <div class="space-y-4">
+            <input type="text" id="user-name" placeholder="Masukkan Nama Kamu" class="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-charming-red outline-none transition">
+            <button onclick="startApp()" class="w-full bg-charming-red text-white font-bold py-4 rounded-xl shadow-lg hover:bg-red-700 transition transform hover:scale-105">
+                <i class="fas fa-play mr-2"></i>Mulai Belajar
+            </button>
+        </div>
+        
+        <p class="text-gray-500 text-xs mt-6">
+            Aplikasi pembelajaran komunikasi digital berbasis kearifan lokal Minangkabau
+        </p>
+    </div>
+</div>
+
+<!-- PRETEST SECTION -->
+<div id="pretest" class="section container mx-auto px-4 py-10 max-w-2xl">
+    <div class="bg-white p-8 rounded-3xl shadow-lg border-t-8 border-accent-orange">
+        <h2 class="text-3xl font-bold mb-2 text-charming-red">Pre-Test Pemahaman</h2>
+        <p class="text-gray-600 mb-8">Halo <span id="display-name" class="font-bold text-charming-red"></span>! 👋 Mari ukur pemahaman awalmu tentang komunikasi digital yang santun.</p>
+        
+        <div class="space-y-8" id="pretest-container">
+            <div class="p-6 bg-gray-50 rounded-xl border-l-4 border-charming-red">
+                <p class="font-semibold mb-4">1. Kato Nan Ampek digunakan untuk...</p>
+                <div class="space-y-3">
+                    <label class="block p-3 border rounded-lg cursor-pointer hover:bg-gray-100">
+                        <input type="radio" name="preq1"> Mempercepat komunikasi
+                    </label>
+                    <label class="block p-3 border rounded-lg cursor-pointer hover:bg-gray-100">
+                        <input type="radio" name="preq1" id="pre-q1-correct"> Mengatur kesantunan sesuai konteks dan lawan bicara
+                    </label>
+                </div>
+            </div>
+
+            <div class="p-6 bg-gray-50 rounded-xl border-l-4 border-accent-orange">
+                <p class="font-semibold mb-4">2. AREL singkatan dari...</p>
+                <div class="space-y-3">
+                    <label class="block p-3 border rounded-lg cursor-pointer hover:bg-gray-100">
+                        <input type="radio" name="preq2"> Argument, Reason, Example, Learning
+                    </label>
+                    <label class="block p-3 border rounded-lg cursor-pointer hover:bg-gray-100">
+                        <input type="radio" name="preq2" id="pre-q2-correct"> Argument, Reason, Example, Link
+                    </label>
+                </div>
+            </div>
+
+            <div class="p-6 bg-gray-50 rounded-xl border-l-4 border-soft-purple">
+                <p class="font-semibold mb-4">3. Komunikasi santun penting karena... (Skala 1-5)</p>
+                <input type="range" min="1" max="5" value="3" class="w-full" id="pre-q3">
+                <div class="flex justify-between text-xs text-gray-500 mt-2">
+                    <span>Sangat Tidak Setuju</span>
+                    <span>Sangat Setuju</span>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="submitPretest()" class="mt-8 w-full bg-accent-orange text-white font-bold py-4 rounded-xl shadow-lg hover:bg-yellow-600 transition">
+            <i class="fas fa-check mr-2"></i>Kirim Jawaban Pre-Test
+        </button>
+    </div>
+</div>
+
+<!-- DASHBOARD SECTION -->
+<div id="dashboard" class="section container mx-auto px-4 py-10">
+    <div class="mb-10">
+        <h2 class="text-4xl font-bold text-charming-red mb-2">Dashboard Belajar</h2>
+        <p class="text-gray-600">Selamat datang, <span class="font-bold" id="dash-name"></span>! 👋 Pilih modul untuk memulai pembelajaran.</p>
+    </div>
+
+    <!-- Progress Card -->
+    <div class="bg-gradient-to-r from-charming-red to-red-700 text-white p-8 rounded-3xl mb-10 shadow-lg">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="text-4xl font-bold mb-2" id="progress-score">0%</div>
+                <p class="text-sm opacity-90">Progress Pembelajaran</p>
+            </div>
+            <div class="text-center border-l border-r border-white/30">
+                <div class="text-4xl font-bold mb-2" id="total-posts">0</div>
+                <p class="text-sm opacity-90">Diskusi Aktif</p>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl font-bold mb-2" id="my-contributions">0</div>
+                <p class="text-sm opacity-90">Kontribusiku</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Features -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div class="bg-white p-8 rounded-3xl shadow-lg border-b-8 border-red-500 card-hover cursor-pointer" onclick="showSection('komunikasi')">
+            <div class="bg-red-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-4">
+                <i class="fas fa-heart text-charming-red text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2 text-charming-red">Bijak Berkomunikasi</h3>
+            <p class="text-gray-600 text-sm">Pelajari Kato Nan Ampek dan prinsip komunikasi santun di era digital.</p>
+            <div class="mt-4 text-xs text-gray-400">📚 4 Materi • 5 Latihan</div>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl shadow-lg border-b-8 border-yellow-500 card-hover cursor-pointer" onclick="showSection('argumen')">
+            <div class="bg-yellow-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-4">
+                <i class="fas fa-brain text-yellow-600 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Bijak Berargumentasi</h3>
+            <p class="text-gray-600 text-sm">Kuasai metode AREL untuk menyusun argumen yang logis dan meyakinkan.</p>
+            <div class="mt-4 text-xs text-gray-400">📚 5 Materi • 3 Latihan</div>
+        </div>
+
+        <div class="bg-white p-8 rounded-3xl shadow-lg border-b-8 border-purple-500 card-hover cursor-pointer" onclick="showSection('diskusi')">
+            <div class="bg-purple-100 w-16 h-16 rounded-2xl flex items-center justify-center mb-4">
+                <i class="fas fa-users text-purple-600 text-2xl"></i>
+            </div>
+            <h3 class="text-xl font-bold mb-2">Ruang Selaras</h3>
+            <p class="text-gray-600 text-sm">Berdiskusi sehat, berbagi pemikiran, dan terapkan ilmu komunikasi bersama.</p>
+            <div class="mt-4 text-xs text-gray-400">💬 <span id="diskusi-count">0</span> Topik Aktif</div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="p-6 bg-soft-purple text-white rounded-3xl shadow-lg flex flex-col justify-between">
+            <div>
+                <h4 class="text-xl font-bold mb-2">Selesai Belajar?</h4>
+                <p class="opacity-90">Uji kemampuanmu dengan Post-Test untuk mengukur peningkatan pemahaman.</p>
+            </div>
+            <button onclick="showSection('posttest')" class="mt-4 bg-white text-soft-purple px-6 py-2 rounded-lg font-bold hover:bg-gray-100 transition self-start">
+                <i class="fas fa-tasks mr-2"></i>Mulai Post-Test
+            </button>
+        </div>
+
+        <div class="p-6 bg-accent-orange text-white rounded-3xl shadow-lg flex flex-col justify-between">
+            <div>
+                <h4 class="text-xl font-bold mb-2">Export Data Belajarmu</h4>
+                <p class="opacity-90">Download hasil pre-test, post-test, dan kontribusi diskusi ke Excel.</p>
+            </div>
+            <button onclick="exportToExcel()" class="mt-4 bg-white text-accent-orange px-6 py-2 rounded-lg font-bold hover:bg-gray-100 transition self-start">
+                <i class="fas fa-download mr-2"></i>Download Excel
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- KOMUNIKASI SECTION -->
+<div id="komunikasi" class="section container mx-auto px-4 py-10">
+    <button onclick="showSection('dashboard')" class="mb-6 text-charming-red font-semibold hover:text-red-700">
+        <i class="fas fa-arrow-left mr-2"></i>Kembali ke Dashboard
+    </button>
+
+    <div class="max-w-4xl">
+        <!-- Header -->
+        <div class="bg-white p-8 rounded-3xl shadow-lg mb-8 border-l-8 border-charming-red">
+            <h2 class="text-4xl font-bold text-charming-red mb-4">🗣️ Bijak Berkomunikasi</h2>
+            <p class="text-gray-700">Memahami cara berkomunikasi yang santun, terutama di era digital, adalah kunci untuk membangun hubungan yang baik dan menghindari konflik yang tidak perlu.</p>
+        </div>
+
+        <!-- Kato Nan Ampek Tabs -->
+        <div class="mb-10">
+            <div class="flex gap-2 mb-6 flex-wrap">
+                <button onclick="showKato('mandaki')" id="tab-mandaki" class="px-6 py-3 bg-charming-red text-white rounded-lg font-semibold transition">Kato Mandaki</button>
+                <button onclick="showKato('manurun')" id="tab-manurun" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold transition hover:bg-gray-400">Kato Manurun</button>
+                <button onclick="showKato('mandata')" id="tab-mandata" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold transition hover:bg-gray-400">Kato Mandata</button>
+                <button onclick="showKato('malereng')" id="tab-malereng" class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold transition hover:bg-gray-400">Kato Malereng</button>
+            </div>
+
+            <!-- Mandaki -->
+            <div id="kato-mandaki" class="bg-white p-8 rounded-3xl shadow-lg">
+                <h3 class="text-2xl font-bold text-charming-red mb-4">🟢 Kato Mandaki</h3>
+                <p class="text-gray-700 mb-6"><strong>Digunakan untuk:</strong> Orang yang lebih tua, guru, orang tua, atau orang yang dihormati.</p>
+                
+                <div class="bg-red-50 p-6 rounded-xl mb-6 border-l-4 border-charming-red">
+                    <h4 class="font-bold mb-3">✨ Ciri-ciri:</h4>
+                    <ul class="space-y-2 text-gray-700">
+                        <li>✓ Sopan dan menghormati</li>
+                        <li>✓ Menggunakan kata-kata halus</li>
+                        <li>✓ Tidak memotong pembicaraan</li>
+                        <li>✓ Mendengarkan dengan seksama</li>
+                    </ul>
+                </div>
+
+                <div class="bg-yellow-50 p-6 rounded-xl border-l-4 border-accent-orange">
+                    <h4 class="font-bold mb-3">💬 Contoh:</h4>
+                    <div class="space-y-3">
+                        <div class="p-4 bg-red-100 rounded-lg">
+                            <p class="text-sm text-gray-500">❌ Salah:</p>
+                            <p class="font-semibold text-gray-800">"Pak, itu salah banget."</p>
+                        </div>
+                        <div class="p-4 bg-green-100 rounded-lg">
+                            <p class="text-sm text-gray-500">✅ Benar:</p>
+                            <p class="font-semibold text-gray-800">"Mohon izin, Pak. Menurut saya ada sudut pandang lain yang bisa dipertimbangkan."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manurun -->
+            <div id="kato-manurun" class="bg-white p-8 rounded-3xl shadow-lg hidden">
+                <h3 class="text-2xl font-bold text-blue-600 mb-4">🔵 Kato Manurun</h3>
+                <p class="text-gray-700 mb-6"><strong>Digunakan untuk:</strong> Orang yang lebih muda, adik, atau orang yang berada di posisi lebih rendah.</p>
+                
+                <div class="bg-blue-50 p-6 rounded-xl mb-6 border-l-4 border-blue-500">
+                    <h4 class="font-bold mb-3">✨ Ciri-ciri:</h4>
+                    <ul class="space-y-2 text-gray-700">
+                        <li>✓ Membimbing dengan lembut</li>
+                        <li>✓ Tidak merendahkan</li>
+                        <li>✓ Penuh empati dan kesabaran</li>
+                        <li>✓ Memberikan nasihat konstruktif</li>
+                    </ul>
+                </div>
+
+                <div class="bg-yellow-50 p-6 rounded-xl border-l-4 border-accent-orange">
+                    <h4 class="font-bold mb-3">💬 Contoh:</h4>
+                    <div class="space-y-3">
+                        <div class="p-4 bg-red-100 rounded-lg">
+                            <p class="text-sm text-gray-500">❌ Salah:</p>
+                            <p class="font-semibold text-gray-800">"Kamu nggak ngerti apa-apa sih."</p>
+                        </div>
+                        <div class="p-4 bg-green-100 rounded-lg">
+                            <p class="text-sm text-gray-500">✅ Benar:</p>
+                            <p class="font-semibold text-gray-800">"Coba kita pahami bersama-sama, ya. Ini adalah caranya..."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mandata -->
+            <div id="kato-mandata" class="bg-white p-8 rounded-3xl shadow-lg hidden">
+                <h3 class="text-2xl font-bold text-yellow-600 mb-4">🟡 Kato Mandata</h3>
+                <p class="text-gray-700 mb-6"><strong>Digunakan untuk:</strong> Teman sebaya atau orang yang berada pada tingkat yang sama.</p>
+                
+                <div class="bg-yellow-50 p-6 rounded-xl mb-6 border-l-4 border-yellow-500">
+                    <h4 class="font-bold mb-3">✨ Ciri-ciri:</h4>
+                    <ul class="space-y-2 text-gray-700">
+                        <li>✓ Santai tapi tetap sopan</li>
+                        <li>✓ Saling menghargai pendapat</li>
+                        <li>✓ Setara dan demokratis</li>
+                        <li>✓ Akrab namun tetap ramah</li>
+                    </ul>
+                </div>
+
+                <div class="bg-yellow-50 p-6 rounded-xl border-l-4 border-accent-orange">
+                    <h4 class="font-bold mb-3">💬 Contoh:</h4>
+                    <div class="space-y-3">
+                        <div class="p-4 bg-red-100 rounded-lg">
+                            <p class="text-sm text-gray-500">❌ Salah:</p>
+                            <p class="font-semibold text-gray-800">"Pendapatmu itu aneh banget sih."</p>
+                        </div>
+                        <div class="p-4 bg-green-100 rounded-lg">
+                            <p class="text-sm text-gray-500">✅ Benar:</p>
+                            <p class="font-semibold text-gray-800">"Aku paham maksudmu, tapi aku punya sudut pandang yang berbeda. Bagaimana kalau kita diskusikan?"</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Malereng -->
+            <div id="kato-malereng" class="bg-white p-8 rounded-3xl shadow-lg hidden">
+                <h3 class="text-2xl font-bold text-purple-600 mb-4">🟣 Kato Malereng</h3>
+                <p class="text-gray-700 mb-6"><strong>Digunakan untuk:</strong> Menyampaikan sesuatu secara halus, tidak langsung, atau menggunakan bahasa kiasan.</p>
+                
+                <div class="bg-purple-50 p-6 rounded-xl mb-6 border-l-4 border-purple-500">
+                    <h4 class="font-bold mb-3">✨ Ciri-ciri:</h4>
+                    <ul class="space-y-2 text-gray-700">
+                        <li>✓ Tidak menyakiti perasaan</li>
+                        <li>✓ Tidak frontal atau langsung</li>
+                        <li>✓ Menggunakan bahasa kiasan</li>
+                        <li>✓ Tetap efektif menyampaikan pesan</li>
+                    </ul>
+                </div>
+
+                <div class="bg-yellow-50 p-6 rounded-xl border-l-4 border-accent-orange">
+                    <h4 class="font-bold mb-3">💬 Contoh:</h4>
+                    <div class="space-y-3">
+                        <div class="p-4 bg-red-100 rounded-lg">
+                            <p class="text-sm text-gray-500">❌ Salah:</p>
+                            <p class="font-semibold text-gray-800">"Kamu kasar banget sih."</p>
+                        </div>
+                        <div class="p-4 bg-green-100 rounded-lg">
+                            <p class="text-sm text-gray-500">✅ Benar:</p>
+                            <p class="font-semibold text-gray-800">"Mungkin akan lebih baik kalau disampaikan dengan tone yang sedikit lebih lembut. Orang lain bisa merasa terluka dengan penyampaian yang terlalu keras."</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latihan Interaktif -->
+        <div class="bg-white p-8 rounded-3xl shadow-lg">
+            <h3 class="text-2xl font-bold text-charming-red mb-6">🎭 Latihan Perbaiki Kalimat</h3>
+            <div id="latihan-komunikasi" class="space-y-6">
+                <!-- Soal 1 -->
+                <div class="p-6 bg-red-50 rounded-xl border-l-4 border-charming-red">
+                    <p class="font-semibold mb-4">1. Perbaiki kalimat ini (kepada guru):</p>
+                    <p class="p-3 bg-white rounded-lg mb-4 font-mono text-red-600">"Pak, ini nggak adil banget sih!"</p>
+                    <textarea id="answer1" placeholder="Tulis perbaikanmu di sini..." class="w-full p-3 border rounded-lg mb-3"></textarea>
+                    <button onclick="checkKomunikasi(1)" class="bg-charming-red text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700">Cek Jawaban</button>
+                </div>
+
+                <!-- Soal 2 -->
+                <div class="p-6 bg-blue-50 rounded-xl border-l-4 border-blue-500">
+                    <p class="font-semibold mb-4">2. Perbaiki kalimat ini (kepada teman):</p>
+                    <p class="p-3 bg-white rounded-lg mb-4 font-mono text-blue-600">"Pendapatmu itu aneh dan nggak masuk akal."</p>
+                    <textarea id="answer2" placeholder="Tulis perbaikanmu di sini..." class="w-full p-3 border rounded-lg mb-3"></textarea>
+                    <button onclick="checkKomunikasi(2)" class="bg-charming-red text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700">Cek Jawaban</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ARGUMEN SECTION -->
+<div id="argumen" class="section container mx-auto px-4 py-10">
+    <button onclick="showSection('dashboard')" class="mb-6 text-charming-red font-semibold hover:text-red-700">
+        <i class="fas fa-arrow-left mr-2"></i>Kembali ke Dashboard
+    </button>
+
+    <div class="max-w-5xl">
+        <!-- Header -->
+        <div class="bg-white p-8 rounded-3xl shadow-lg mb-8 border-l-8 border-accent-orange">
+            <h2 class="text-4xl font-bold text-charming-red mb-4">🧠 Bijak Berargumentasi</h2>
+            <p class="text-gray-700">Berpendapat adalah hak setiap orang, tetapi cara menyampaikan pendapat harus dipikirkan dengan matang. Gunakan metode AREL untuk membuat argumen yang kuat, logis, dan meyakinkan!</p>
+        </div>
+
+        <!-- AREL Penjelasan -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-red-500">
+                <h4 class="text-lg font-bold text-red-600 mb-3">🔴 A - Argument</h4>
+                <p class="text-gray-700 mb-3">Pendapat atau klaim utamamu.</p>
+                <div class="p-3 bg-red-50 rounded-lg text-sm">
+                    <p class="font-semibold text-gray-700">"Saya setuju bahwa penggunaan media sosial perlu dibatasi."</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-blue-500">
+                <h4 class="text-lg font-bold text-blue-600 mb-3">🔵 R - Reason</h4>
+                <p class="text-gray-700 mb-3">Alasan logis mengapa kamu berpikir begitu.</p>
+                <div class="p-3 bg-blue-50 rounded-lg text-sm">
+                    <p class="font-semibold text-gray-700">"Karena penggunaan berlebihan dapat mengganggu fokus belajar dan kesehatan mental."</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-yellow-500">
+                <h4 class="text-lg font-bold text-yellow-600 mb-3">🟡 E - Example</h4>
+                <p class="text-gray-700 mb-3">Bukti nyata atau contoh konkret.</p>
+                <div class="p-3 bg-yellow-50 rounded-lg text-sm">
+                    <p class="font-semibold text-gray-700">"Menurut penelitian, remaja menghabiskan 7-8 jam per hari di media sosial."</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-t-4 border-purple-500">
+                <h4 class="text-lg font-bold text-purple-600 mb-3">🟣 L - Link</h4>
+                <p class="text-gray-700 mb-3">Penegasan kembali dan kesimpulan.</p>
+                <div class="p-3 bg-purple-50 rounded-lg text-sm">
+                    <p class="font-semibold text-gray-700">"Oleh karena itu, pembatasan penggunaan media sosial sangat penting untuk kesejahteraan remaja."</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- AREL Builder -->
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Form -->
+            <div class="bg-white p-8 rounded-3xl shadow-lg">
+                <h3 class="text-2xl font-bold mb-6 text-charming-red">✍️ AREL Builder</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block font-bold mb-2 text-red-600">A - Argument (Pendapatmu)</label>
+                        <input id="arel-a" type="text" placeholder="Saya setuju/tidak setuju bahwa..." class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-charming-red outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block font-bold mb-2 text-blue-600">R - Reason (Alasan)</label>
+                        <textarea id="arel-r" placeholder="Sebab..." class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-charming-red outline-none h-24"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold mb-2 text-yellow-600">E - Example (Contoh/Bukti)</label>
+                        <textarea id="arel-e" placeholder="Misalnya..." class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-charming-red outline-none h-24"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold mb-2 text-purple-600">L - Link (Penegasan)</label>
+                        <input id="arel-l" type="text" placeholder="Oleh karena itu..." class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-charming-red outline-none">
+                    </div>
+
+                    <button onclick="buildArel()" class="w-full bg-charming-red text-white py-3 rounded-lg font-bold hover:bg-red-700 transition">
+                        <i class="fas fa-puzzle-piece mr-2"></i>Gabungkan Argumen
+                    </button>
+                </div>
+            </div>
+
+            <!-- Output -->
+            <div class="bg-gradient-to-br from-red-50 to-yellow-50 p-8 rounded-3xl shadow-lg border-2 border-dashed border-gray-300">
+                <h3 class="text-2xl font-bold mb-6 text-charming-red">📄 Hasil Argumentasimu</h3>
+                <div id="arel-output" class="flex flex-col items-center justify-center min-h-64">
+                    <img src="https://illustrations.popsy.co/amber/thinking-bubble.svg" class="h-40 mb-4 opacity-50">
+                    <p id="arel-result-text" class="text-gray-500 italic text-center">Isi form di samping untuk melihat hasil argumentasi yang sempurna!</p>
+                </div>
+                <button id="copy-arel-btn" onclick="copyToClipboard()" class="w-full mt-4 bg-charming-red text-white py-2 rounded-lg font-semibold hidden hover:bg-red-700">
+                    <i class="fas fa-copy mr-2"></i>Salin Teks
+                </button>
+            </div>
+        </div>
+
+        <!-- Contoh Argumen -->
+        <div class="mt-10 bg-white p-8 rounded-3xl shadow-lg">
+            <h3 class="text-2xl font-bold text-charming-red mb-6">📚 Contoh Argumen Baik vs Buruk</h3>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="font-bold mb-4 text-red-600">❌ Argumen Kurang Baik:</h4>
+                    <div class="p-6 bg-red-50 rounded-xl border-l-4 border-red-500">
+                        <p class="text-gray-800 leading-relaxed">
+                            "Media sosial itu buruk. Banyak orang yang tidak jelas pikirannya. Jadi jangan gunakan media sosial."
+                        </p>
+                        <div class="mt-4 pt-4 border-t border-red-200 text-sm text-red-600">
+                            <p><strong>Masalah:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 mt-2">
+                                <li>Tidak jelas dan tidak terstruktur</li>
+                                <li>Tidak ada alasan yang kuat</li>
+                                <li>Tidak ada bukti atau contoh</li>
+                                <li>Terkesan emosional</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="font-bold mb-4 text-green-600">✅ Argumen Baik:</h4>
+                    <div class="p-6 bg-green-50 rounded-xl border-l-4 border-green-500">
+                        <p class="text-gray-800 leading-relaxed text-sm">
+                            <strong>Saya setuju bahwa penggunaan media sosial perlu dibatasi.</strong> Hal ini dikarenakan penggunaan berlebihan dapat mengganggu fokus belajar dan kesehatan mental remaja. Misalnya, penelitian menunjukkan remaja menghabiskan 7-8 jam per hari di media sosial, yang mengurangi waktu tidur mereka. <strong>Oleh karena itu, pembatasan penggunaan media sosial sangat penting untuk kesejahteraan remaja.</strong>
+                        </p>
+                        <div class="mt-4 pt-4 border-t border-green-200 text-sm text-green-600">
+                            <p><strong>Kelebihan:</strong></p>
+                            <ul class="list-disc list-inside space-y-1 mt-2">
+                                <li>Pendapat jelas dan terarah</li>
+                                <li>Alasan logis dan terukur</li>
+                                <li>Ada bukti/data konkret</li>
+                                <li>Kesimpulan yang kuat</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- DISKUSI SECTION -->
+<div id="diskusi" class="section container mx-auto px-4 py-10">
+    <button onclick="showSection('dashboard')" class="mb-6 text-charming-red font-semibold hover:text-red-700">
+        <i class="fas fa-arrow-left mr-2"></i>Kembali ke Dashboard
+    </button>
+
+    <div class="max-w-4xl">
+        <!-- Header -->
+        <div class="bg-white p-8 rounded-3xl shadow-lg mb-8 border-l-8 border-soft-purple">
+            <h2 class="text-4xl font-bold text-charming-red mb-4">💬 Ruang Selaras</h2>
+            <p class="text-gray-700">Tempat berdiskusi santun, berbagi pemikiran, dan mempraktikkan ilmu komunikasi bersama-sama!</p>
+        </div>
+
+        <!-- Tombol Buat Mosi -->
+        <button onclick="openMotionModal()" class="mb-8 w-full bg-charming-red text-white py-4 rounded-xl font-bold hover:bg-red-700 transition shadow-lg">
+            <i class="fas fa-plus-circle mr-2"></i>Buat Mosi Baru
+        </button>
+
+        <!-- Daftar Diskusi -->
+        <div id="diskusi-list" class="space-y-6">
+            <div class="text-center py-10 text-gray-500">
+                <i class="fas fa-comments text-5xl mb-3 opacity-30"></i>
+                <p>Belum ada diskusi. Jadilah yang pertama membuat mosi!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODUL SECTION -->
+<div id="modul" class="section container mx-auto px-4 py-10">
+    <button onclick="showSection('dashboard')" class="mb-6 text-charming-red font-semibold hover:text-red-700">
+        <i class="fas fa-arrow-left mr-2"></i>Kembali ke Dashboard
+    </button>
+
+    <div class="max-w-4xl">
+        <div class="bg-white p-8 rounded-3xl shadow-lg mb-8 border-l-8 border-accent-orange">
+            <h2 class="text-3xl font-bold text-charming-red mb-4">📚 Pusat Modul & Materi</h2>
+            <p class="text-gray-700">Download atau buka materi pembelajaran untuk memperdalam pemahamanmu tentang komunikasi digital yang santun.</p>
+        </div>
+
+        <!-- Modul Tersedia -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-charming-red">
+                <h3 class="text-lg font-bold text-charming-red mb-3">📖 Modul Utama SELARAS</h3>
+                <p class="text-gray-600 mb-6">Panduan lengkap tentang Kato Nan Ampek, AREL, dan komunikasi digital yang santun.</p>
+                <button class="w-full bg-charming-red text-white py-2 rounded-lg font-semibold hover:bg-red-700">
+                    <i class="fas fa-file-pdf mr-2"></i>Buka Modul
+                </button>
+            </div>
+
+            <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-accent-orange">
+                <h3 class="text-lg font-bold text-accent-orange mb-3">🎓 Panduan Diskusi Sehat</h3>
+                <p class="text-gray-600 mb-6">Cara berdiskusi yang santun, menghargai perbedaan, dan membangun kesepakatan bersama.</p>
+                <button class="w-full bg-accent-orange text-white py-2 rounded-lg font-semibold hover:bg-yellow-600">
+                    <i class="fas fa-book mr-2"></i>Buka Modul
+                </button>
+            </div>
+
+            <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-soft-purple">
+                <h3 class="text-lg font-bold text-soft-purple mb-3">🧠 Logika Berpikir Kritis</h3>
+                <p class="text-gray-600 mb-6">Teknik berpikir kritis untuk menganalisis informasi dan membuat keputusan yang tepat.</p>
+                <button class="w-full bg-soft-purple text-white py-2 rounded-lg font-semibold hover:bg-purple-700">
+                    <i class="fas fa-brain mr-2"></i>Buka Modul
+                </button>
+            </div>
+
+            <div class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-green-500">
+                <h3 class="text-lg font-bold text-green-600 mb-3">🌐 Netiket Digital</h3>
+                <p class="text-gray-600 mb-6">Etika bermedia sosial, cara menyampaikan kritik, dan menghindari cyberbullying.</p>
+                <button class="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700">
+                    <i class="fas fa-globe mr-2"></i>Buka Modul
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- POSTTEST SECTION -->
+<div id="posttest" class="section container mx-auto px-4 py-10 max-w-2xl">
+    <button onclick="showSection('dashboard')" class="mb-6 text-charming-red font-semibold hover:text-red-700">
+        <i class="fas fa-arrow-left mr-2"></i>Kembali ke Dashboard
+    </button>
+
+    <div class="bg-white p-8 rounded-3xl shadow-lg border-t-8 border-accent-orange">
+        <h2 class="text-3xl font-bold mb-2 text-charming-red">📋 Post-Test Pemahaman</h2>
+        <p class="text-gray-600 mb-8">Halo <span id="posttest-name" class="font-bold text-charming-red"></span>! 🎉 Mari uji sejauh mana peningkatan pemahamanmu setelah belajar.</p>
+        
+        <div class="space-y-8" id="posttest-container">
+            <div class="p-6 bg-gray-50 rounded-xl border-l-4 border-charming-red">
+                <p class="font-semibold mb-4">1. Kapan menggunakan Kato Malereng?</p>
+                <div class="space-y-3">
+                    <label class="block p-3 border rounded-lg cursor-pointer hover:bg-gray-100">
+                        <input type="radio" name="postq1"> Saat berbicara dengan teman sebaya
+                    </label>
+                    <label class="block p-3 border rounded-lg cursor-pointer hover:bg-gray-100">
+                        <input type="radio" name="postq1" id="post-q1-correct"> Saat menyampaikan sesuatu secara halus/tidak langsung
+                    </label>
+                    <label class="block p-3 border rounded-lg cursor-pointer hover:bg-gray-100">
+                        <input type="radio" name="postq1"> Saat berbicara dengan orang tua
+                    </label>
+                </div>
+            </div>
+
+            <div class="p-6 bg-gray-50 rounded-xl border-l-4 border-accent-orange">
+                <p class="font-semibold mb-4">2. Apa fungsi 'E' dalam metode AREL?</p>
+                <div class="space-y-3">
+                    <label class="block p-3 border rounded-lg cursor-pointer hover:bg-gray-100">
+                        <input type="radio" name="postq2"> Menjelaskan alasan
+                    </label>
+                    <label class="block p-3 border rounded-lg cursor-pointer hover:bg-gray-100">
+                        <input type="radio" name="postq2" id="post-q2-correct"> Memberikan contoh atau bukti nyata
+                    </label>
+                    <label class="block p-3 border rounded-lg cursor-pointer hover:bg-gray-100">
+                        <input type="radio" name="postq2"> Menyimpulkan argumen
+                    </label>
+                </div>
+            </div>
+
+            <div class="p-6 bg-gray-50 rounded-xl border-l-4 border-soft-purple">
+                <p class="font-semibold mb-4">3. Setelah belajar, saya lebih percaya diri berbicara santun (Skala 1-5):</p>
+                <input type="range" min="1" max="5" value="3" class="w-full" id="post-q3">
+                <div class="flex justify-between text-xs text-gray-500 mt-2">
+                    <span>Sangat Tidak Setuju</span>
+                    <span>Sangat Setuju</span>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="submitPosttest()" class="mt-8 w-full bg-accent-orange text-white font-bold py-4 rounded-xl shadow-lg hover:bg-yellow-600 transition">
+            <i class="fas fa-check mr-2"></i>Kirim Jawaban Post-Test
+        </button>
+    </div>
+</div>
+
+<!-- MODAL: Buat Mosi -->
+<div id="motion-modal" class="modal-backdrop">
+    <div class="modal-content">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-charming-red">Buat Mosi Baru</h3>
+            <button onclick="closeMotionModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-2xl"></i></button>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block font-bold mb-2">Judul Mosi</label>
+                <input id="motion-title" type="text" placeholder="Contoh: Apakah komentar kasar perlu diberi sanksi?" class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-charming-red outline-none">
+            </div>
+
+            <div>
+                <label class="block font-bold mb-2">Deskripsi Mosi</label>
+                <textarea id="motion-desc" placeholder="Jelaskan latar belakang dan konteks mosi..." class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-charming-red outline-none h-32"></textarea>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="submitMotion()" class="flex-1 bg-charming-red text-white py-3 rounded-lg font-bold hover:bg-red-700">
+                    <i class="fas fa-paper-plane mr-2"></i>Buat Mosi
+                </button>
+                <button onclick="closeMotionModal()" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-400">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: Reply Komentar -->
+<div id="reply-modal" class="modal-backdrop">
+    <div class="modal-content">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-charming-red">Balas Komentar</h3>
+            <button onclick="closeReplyModal()" class="text-gray-500 hover:text-gray-700"><i class="fas fa-times text-2xl"></i></button>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="block font-bold mb-2">Tanggapanmu</label>
+                <textarea id="reply-text" placeholder="Tulis tanggapan dengan santun dan berdasarkan argumen yang kuat..." class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-charming-red outline-none h-32"></textarea>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="submitReply()" class="flex-1 bg-charming-red text-white py-3 rounded-lg font-bold hover:bg-red-700">
+                    <i class="fas fa-paper-plane mr-2"></i>Kirim Tanggapan
+                </button>
+                <button onclick="closeReplyModal()" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-400">
+                    Batal
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+    // ============= DATA STORAGE =============
+    let appData = {
+        userName: '',
+        preTestScore: 0,
+        postTestScore: 0,
+        discussions: [],
+        userContributions: 0,
+        startTime: new Date(),
+        katoAnswers: {},
+        arelBuilds: []
+    };
+
+    // ============= UTILITY FUNCTIONS =============
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    function showNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'notification';
+        notification.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${message}`;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 3000);
+    }
+
+    function showKato(katoType) {
+        const katoElements = document.querySelectorAll('[id^="kato-"]');
+        const tabButtons = document.querySelectorAll('[id^="tab-"]');
+        
+        katoElements.forEach(el => el.classList.add('hidden'));
+        tabButtons.forEach(btn => btn.classList.remove('bg-charming-red', 'text-white'));
+        
+        document.getElementById(`kato-${katoType}`).classList.remove('hidden');
+        document.getElementById(`tab-${katoType}`).classList.add('bg-charming-red', 'text-white');
+    }
+
+    // ============= LOGIN FLOW =============
+    function startApp() {
+        const nameInput = document.getElementById('user-name');
+        if (nameInput.value.trim() === '') {
+            alert('Mohon masukkan nama kamu terlebih dahulu! 😊');
+            return;
+        }
+        
+        appData.userName = nameInput.value;
+        document.getElementById('display-name').textContent = appData.userName;
+        document.getElementById('dash-name').textContent = appData.userName;
+        document.getElementById('posttest-name').textContent = appData.userName;
+        document.getElementById('main-nav').classList.remove('hidden');
+        
+        showSection('pretest');
+    }
+
+    // ============= PRETEST =============
+    function submitPretest() {
+        const q1 = document.getElementById('pre-q1-correct').checked;
+        const q2 = document.getElementById('pre-q2-correct').checked;
+        
+        let score = 0;
+        if(q1) score += 50;
+        if(q2) score += 50;
+        
+        appData.preTestScore = score;
+        showNotification(`Pre-Test Selesai! Skor: ${score}/100`);
+        showSection('dashboard');
+        updateDashboard();
+    }
+
+    // ============= POSTTEST =============
+    function submitPosttest() {
+        const q1 = document.getElementById('post-q1-correct').checked;
+        const q2 = document.getElementById('post-q2-correct').checked;
+        
+        let score = 0;
+        if(q1) score += 50;
+        if(q2) score += 50;
+        
+        appData.postTestScore = score;
+        const improvement = appData.postTestScore - appData.preTestScore;
+        const message = improvement > 0 ? `Post-Test Selesai! Skor: ${score}/100 (↑ +${improvement} poin)` : `Post-Test Selesai! Skor: ${score}/100`;
+        
+        showNotification(message);
+        showSection('dashboard');
+        updateDashboard();
+    }
+
+    // ============= KOMUNIKASI LATIHAN =============
+    function checkKomunikasi(num) {
+        const answer = document.getElementById(`answer${num}`).value;
+        if(!answer.trim()) {
+            alert('Mohon isi jawabanmu terlebih dahulu!');
+            return;
+        }
+        
+        appData.katoAnswers[`soal${num}`] = answer;
+        alert('✅ Jawaban kamu tercatat! Terima kasih sudah berlatih. 👍');
+    }
+
+    // ============= AREL BUILDER =============
+    function buildArel() {
+        const a = document.getElementById('arel-a').value;
+        const r = document.getElementById('arel-r').value;
+        const e = document.getElementById('arel-e').value;
+        const l = document.getElementById('arel-l').value;
+        
+        if(!a || !r || !e || !l) {
+            alert('Mohon lengkapi semua kolom AREL! 📝');
+            return;
+        }
+        
+        const result = `${a} Hal ini dikarenakan ${r}. Sebagai contoh, ${e}. Oleh karena itu, ${l}`;
+        document.getElementById('arel-result-text').textContent = result;
+        document.getElementById('arel-result-text').classList.remove('italic', 'text-gray-500');
+        document.getElementById('arel-result-text').classList.add('text-charming-red', 'font-semibold');
+        document.getElementById('copy-arel-btn').classList.remove('hidden');
+        
+        appData.arelBuilds.push({
+            timestamp: new Date(),
+            argument: a,
+            reason: r,
+            example: e,
+            link: l,
+            full: result
+        });
+        
+        showNotification('Argumen berhasil disusun! 🎉');
+    }
+
+    function copyToClipboard() {
+        const text = document.getElementById('arel-result-text').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            showNotification('Teks sudah disalin ke clipboard! ✂️');
+        });
+    }
+
+    // ============= DISKUSI SYSTEM =============
+    function openMotionModal() {
+        document.getElementById('motion-modal').classList.add('active');
+    }
+
+    function closeMotionModal() {
+        document.getElementById('motion-modal').classList.remove('active');
+        document.getElementById('motion-title').value = '';
+        document.getElementById('motion-desc').value = '';
+    }
+
+    function submitMotion() {
+        const title = document.getElementById('motion-title').value;
+        const desc = document.getElementById('motion-desc').value;
+        
+        if(!title.trim() || !desc.trim()) {
+            alert('Mohon isi judul dan deskripsi mosi!');
+            return;
+        }
+        
+        const motion = {
+            id: appData.discussions.length + 1,
+            author: appData.userName,
+            title: title,
+            description: desc,
+            timestamp: new Date(),
+            likes: 0,
+            replies: [],
+            liked: false
+        };
+        
+        appData.discussions.push(motion);
+        appData.userContributions++;
+        
+        renderDiskusi();
+        closeMotionModal();
+        showNotification('Mosi berhasil dibuat! 🎉');
+        updateDashboard();
+    }
+
+    function renderDiskusi() {
+        const diskusiList = document.getElementById('diskusi-list');
+        
+        if(appData.discussions.length === 0) {
+            diskusiList.innerHTML = `
+                <div class="text-center py-10 text-gray-500">
+                    <i class="fas fa-comments text-5xl mb-3 opacity-30"></i>
+                    <p>Belum ada diskusi. Jadilah yang pertama membuat mosi!</p>
+                </div>
+            `;
+            return;
+        }
+        
+        diskusiList.innerHTML = appData.discussions.map((motion, idx) => `
+            <div class="bg-white p-6 rounded-2xl shadow-lg border-l-4 border-charming-red hover:shadow-xl transition">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h3 class="text-lg font-bold text-charming-red">${motion.title}</h3>
+                        <p class="text-xs text-gray-500">Oleh <span class="font-semibold">${motion.author}</span> • ${new Date(motion.timestamp).toLocaleDateString('id-ID')}</p>
+                    </div>
+                    <span class="bg-charming-red text-white px-3 py-1 rounded-full text-xs font-bold">${motion.replies.length} Tanggapan</span>
+                </div>
+                
+                <p class="text-gray-700 mb-4">${motion.description}</p>
+                
+                <div class="flex gap-4 mb-4">
+                    <button onclick="toggleLike(${motion.id})" class="flex items-center gap-2 text-charming-red hover:font-bold transition">
+                        <i class="fas fa-heart ${motion.liked ? 'text-charming-red' : 'text-gray-400'}"></i>
+                        <span>${motion.likes} Suka</span>
+                    </button>
+                    <button onclick="openReplyModal(${motion.id})" class="flex items-center gap-2 text-gray-600 hover:text-charming-red transition">
+                        <i class="fas fa-reply"></i>
+                        <span>Balas</span>
+                    </button>
+                </div>
+                
+                ${motion.replies.length > 0 ? `
+                    <div class="bg-gray-50 p-4 rounded-xl space-y-3 border-t pt-4">
+                        ${motion.replies.map((reply, rIdx) => `
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <p class="text-sm font-semibold text-gray-800">${reply.author}</p>
+                                    <p class="text-sm text-gray-700 mt-1">${reply.text}</p>
+                                    <p class="text-xs text-gray-400 mt-2">${new Date(reply.timestamp).toLocaleDateString('id-ID')}</p>
+                                </div>
+                                ${reply.author === appData.userName ? `
+                                    <button onclick="deleteReply(${motion.id}, ${rIdx})" class="text-red-500 hover:text-red-700 text-xs">
+                                        <i class="fas fa-trash"></i> Hapus
+                                    </button>
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            </div>
+        `).join('');
+    }
+
+    function toggleLike(motionId) {
+        const motion = appData.discussions.find(m => m.id === motionId);
+        if(motion) {
+            motion.liked = !motion.liked;
+            motion.likes += motion.liked ? 1 : -1;
+            renderDiskusi();
+        }
+    }
+
+    let currentReplyMotionId = null;
+
+    function openReplyModal(motionId) {
+        currentReplyMotionId = motionId;
+        document.getElementById('reply-modal').classList.add('active');
+    }
+
+    function closeReplyModal() {
+        document.getElementById('reply-modal').classList.remove('active');
+        document.getElementById('reply-text').value = '';
+        currentReplyMotionId = null;
+    }
+
+    function submitReply() {
+        const replyText = document.getElementById('reply-text').value;
+        
+        if(!replyText.trim()) {
+            alert('Mohon tulis tanggapanmu!');
+            return;
+        }
+        
+        const motion = appData.discussions.find(m => m.id === currentReplyMotionId);
+        if(motion) {
+            motion.replies.push({
+                author: appData.userName,
+                text: replyText,
+                timestamp: new Date()
+            });
+            appData.userContributions++;
+            renderDiskusi();
+            closeReplyModal();
+            showNotification('Tanggapan berhasil dikirim! 💬');
+            updateDashboard();
+        }
+    }
+
+    function deleteReply(motionId, replyIdx) {
+        if(confirm('Yakin ingin menghapus tanggapan ini?')) {
+            const motion = appData.discussions.find(m => m.id === motionId);
+            if(motion) {
+                motion.replies.splice(replyIdx, 1);
+                appData.userContributions--;
+                renderDiskusi();
+                updateDashboard();
+            }
+        }
+    }
+
+    // ============= DASHBOARD UPDATE =============
+    function updateDashboard() {
+        const avgScore = (appData.preTestScore + appData.postTestScore) / 2;
+        document.getElementById('progress-score').textContent = Math.round(avgScore) + '%';
+        document.getElementById('total-posts').textContent = appData.discussions.length;
+        document.getElementById('my-contributions').textContent = appData.userContributions;
+        document.getElementById('diskusi-count').textContent = appData.discussions.length;
+        
+        if(appData.discussions.length > 0) {
+            document.getElementById('notif-badge').classList.remove('hidden');
+            document.getElementById('notif-badge').textContent = appData.discussions.length;
+        }
+    }
+
+    // ============= EXPORT TO EXCEL =============
+    function exportToExcel() {
+        // Prepare data
+        const data = {
+            'Data Peserta': [
+                ['Nama', appData.userName],
+                ['Tanggal Mulai', new Date(appData.startTime).toLocaleDateString('id-ID')],
+                ['Waktu Belajar', Math.round((new Date() - appData.startTime) / 60000) + ' menit']
+            ],
+            'Hasil Test': [
+                ['Pre-Test', appData.preTestScore],
+                ['Post-Test', appData.postTestScore],
+                ['Peningkatan', appData.postTestScore - appData.preTestScore + ' poin']
+            ],
+            'Jawaban Kato': Object.entries(appData.katoAnswers).map(([soal, answer]) => [soal, answer]),
+            'AREL Builds': appData.arelBuilds.map(build => [
+                new Date(build.timestamp).toLocaleDateString('id-ID'),
+                build.argument,
+                build.reason,
+                build.example,
+                build.link
+            ]),
+            'Diskusi': appData.discussions.map(motion => [
+                motion.title,
+                motion.author,
+                new Date(motion.timestamp).toLocaleDateString('id-ID'),
+                motion.replies.length,
+                motion.likes
+            ])
+        };
+
+        // Create workbook
+        const workbook = XLSX.utils.book_new();
+        
+        Object.entries(data).forEach(([sheetName, sheetData]) => {
+            if(sheetData.length > 0) {
+                const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+                XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+            }
+        });
+
+        // Download
+        XLSX.writeFile(workbook, `SELARAS_${appData.userName}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        showNotification('File Excel berhasil diunduh! 📊');
+    }
+
+    // ============= LOGOUT =============
+    function logout() {
+        if(confirm('Yakin ingin keluar? Data akan disimpan.')) {
+            location.reload();
+        }
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        renderDiskusi();
+    });
+</script>
+
+</body>
+</html>
