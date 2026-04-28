@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin SELARAS.id</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-gray-800 min-h-screen text-white">
+    <div class="max-w-6xl mx-auto p-8">
+        <h1 class="text-5xl font-bold bg-gradient-to-r from-red-400 to-purple-500 bg-clip-text text-transparent mb-12 text-center">
+            🛠️ Admin SELARAS.id
+        </h1>
+
+        <!-- Konten Management -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            <div class="bg-white/10 backdrop-blur-xl p-8 rounded-3xl border border-white/20 hover:border-white/40 transition-all">
+                <h3 class="text-2xl font-bold mb-6">📝 Tambah Materi</h3>
+                <textarea id="newContent" class="w-full p-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-gray-300 mb-4" rows="4" placeholder="Tulis materi baru..."></textarea>
+                <button onclick="addContent()" class="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 py-3 px-6 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all">
+                    Tambah
+                </button>
+            </div>
+
+            <div class="bg-white/10 backdrop-blur-xl p-8 rounded-3xl border border-white/20 hover:border-white/40 transition-all">
+                <h3 class="text-2xl font-bold mb-6">🔗 Tambah Link</h3>
+                <input id="newLink" class="w-full p-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-gray-300 mb-4" placeholder="https://...">
+                <button onclick="addLink()" class="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 py-3 px-6 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all">
+                    Tambah Link
+                </button>
+            </div>
+
+            <div class="bg-white/10 backdrop-blur-xl p-8 rounded-3xl border border-white/20 hover:border-white/40 transition-all">
+                <h3 class="text-2xl font-bold mb-6">💬 Tambah Mosi</h3>
+                <input id="newMosi" class="w-full p-4 bg-white/20 border border-white/30 rounded-2xl text-white placeholder-gray-300 mb-4" placeholder="Topik diskusi...">
+                <button onclick="addMosi()" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 py-3 px-6 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all">
+                    Tambah Mosi
+                </button>
+            </div>
+        </div>
+
+        <!-- User Data & Export -->
+        <div class="bg-white/10 backdrop-blur-xl p-8 rounded-3xl border border-white/20">
+            <div class="flex justify-between items-center mb-8">
+                <h3 class="text-3xl font-bold">📊 Data User & Scores</h3>
+                <button onclick="exportExcel()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 py-3 px-8 rounded-2xl font-bold shadow-xl hover:shadow-2xl transition-all">
+                    <i class="fas fa-file-excel mr-2"></i>Export Excel
+                </button>
+            </div>
+            <div id="userTable" class="overflow-x-auto">
+                <!-- Data loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+    async function loadData() {
+        try {
+            const res = await axios.get('/api/data');
+            displayUsers(res.data.users);
+            displayContent(res.data.content);
+        } catch(e) { console.error(e); }
+    }
+
+    function displayUsers(users) {
+        document.getElementById('userTable').innerHTML = `
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="border-b border-white/20">
+                        <th class="p-4">Nama</th>
+                        <th class="p-4">Progress</th>
+                        <th class="p-4">Scores</th>
+                        <th class="p-4">Terakhir Login</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${users.map(u => `
+                        <tr class="border-b border-white/10 hover:bg-white/20 transition-all">
+                            <td class="p-4 font-bold">${u.name}</td>
+                            <td class="p-4">
+                                <div class="w-32 bg-white/20 rounded-full p-1">
+                                    <div class="bg-green-400 h-3 rounded-full" style="width:${u.progress}%"></div>
+                                </div>
+                                ${u.progress}%
+                            </td>
+                            <td class="p-4">${JSON.stringify(u.scores)}</td>
+                            <td class="p-4">${new Date(u.lastLogin).toLocaleString('id-ID')}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    async function addContent() {
+        const content = document.getElementById('newContent').value;
+        await axios.post('/api/content', {type: 'materi', content});
+        document.getElementById('newContent').value = '';
+        loadData();
+        alert('✅ Materi ditambahkan!');
+    }
+
+    async function addLink() {
+        const link = document.getElementById('newLink').value;
+        await axios.post('/api/content', {type: 'link', url: link});
+        document.getElementById('newLink').value = '';
+        loadData();
+        alert('✅ Link ditambahkan!');
+    }
+
+    async function addMosi() {
+        const mosi = document.getElementById('newMosi').value;
+        await axios.post('/api/content', {type: 'mosi', text: mosi});
+        document.getElementById('newMosi').value = '';
+        loadData();
+        alert('✅ Mosi ditambahkan!');
+    }
+
+    async function exportExcel() {
+        const res = await axios.get('/api/export');
+        const data = res.data;
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "SELARAS Data");
+        XLSX.writeFile(wb, `selaras-data-${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    loadData();
+    setInterval(loadData, 5000); // Real-time update
+    </script>
+</body>
+</html>
